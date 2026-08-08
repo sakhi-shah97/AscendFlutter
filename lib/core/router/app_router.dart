@@ -4,16 +4,21 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/accounts/presentation/accounts_screen.dart';
+import '../../features/activity/presentation/activity_screen.dart';
 import '../../features/auth/application/auth_providers.dart';
 import '../../features/auth/presentation/sign_in_screen.dart';
 import '../../features/auth/presentation/sign_up_screen.dart';
-import '../../features/dashboard/presentation/dashboard_screen.dart';
+import '../../features/budget/presentation/budget_screen.dart';
+import '../../features/dashboard/presentation/dashboard_shell.dart';
+import '../../features/dashboard/presentation/home_screen.dart';
+import '../../features/settings/presentation/settings_screen.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
   final authRepository = ref.watch(authRepositoryProvider);
 
   return GoRouter(
-    initialLocation: '/',
+    initialLocation: '/home',
     refreshListenable: GoRouterRefreshStream(authRepository.authStateChanges()),
     redirect: (context, state) {
       final loggedIn = authRepository.currentUser != null;
@@ -21,13 +26,49 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           state.matchedLocation == '/sign-up';
 
       if (!loggedIn && !loggingIn) return '/sign-in';
-      if (loggedIn && loggingIn) return '/';
+      if (loggedIn && loggingIn) return '/home';
       return null;
     },
     routes: [
-      GoRoute(
-        path: '/',
-        builder: (context, state) => const DashboardScreen(),
+      StatefulShellRoute.indexedStack(
+        builder: (context, state, navigationShell) =>
+            DashboardShell(navigationShell: navigationShell),
+        branches: [
+          StatefulShellBranch(
+            routes: [
+              GoRoute(path: '/home', builder: (context, state) => const HomeScreen()),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/activity',
+                builder: (context, state) => const ActivityScreen(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(path: '/budget', builder: (context, state) => const BudgetScreen()),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/accounts',
+                builder: (context, state) => const AccountsScreen(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/settings',
+                builder: (context, state) => const SettingsScreen(),
+              ),
+            ],
+          ),
+        ],
       ),
       GoRoute(
         path: '/sign-in',
