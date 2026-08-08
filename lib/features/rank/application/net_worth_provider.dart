@@ -1,9 +1,12 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-/// Net Financial Level (total savings − total debt), in AED.
-///
-/// Placeholder until the Budget/Accounts features exist to compute a real
-/// balance from Firestore data — kept as its own provider (rather than
-/// inlined in [HomeScreen]) so that seam is a one-line swap later, and so
-/// tests can override it directly.
-final netWorthProvider = Provider<double>((ref) => 0);
+import '../../transactions/application/transaction_aggregates.dart' as aggregates;
+import '../../transactions/application/transaction_providers.dart';
+
+/// Net Financial Level (total savings − total debt), in AED — derived live
+/// from the signed-in user's transaction history. Zero (not an error) while
+/// transactions are still loading or the user is signed out.
+final netWorthProvider = Provider<double>((ref) {
+  final transactions = ref.watch(transactionsProvider).value ?? const [];
+  return aggregates.netWorth(transactions);
+});
