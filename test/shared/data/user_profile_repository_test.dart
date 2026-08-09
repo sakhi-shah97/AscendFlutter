@@ -23,4 +23,19 @@ void main() {
     expect(profile?.email, 'a@b.com');
     expect(profile?.currency, 'USD');
   });
+
+  test('updateCurrency changes only the currency field', () async {
+    final firestore = FakeFirebaseFirestore();
+    await firestore.collection('users').doc('user-1').set({
+      'email': 'a@b.com',
+      'currency': 'AED',
+    });
+    final repository = UserProfileRepository(firestore: firestore);
+
+    await repository.updateCurrency('user-1', 'USD');
+
+    final profile = await repository.watchProfile('user-1').first;
+    expect(profile?.currency, 'USD');
+    expect(profile?.email, 'a@b.com');
+  });
 }

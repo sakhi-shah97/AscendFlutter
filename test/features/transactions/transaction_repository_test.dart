@@ -63,4 +63,15 @@ void main() {
     await repository.add(uid, _txn(TransactionType.income, 100, DateTime(2026, 1, 1)));
     expect(await repository.watchTransactions('other-user').first, isEmpty);
   });
+
+  test('deleteAll removes every transaction for the given uid only', () async {
+    await repository.add(uid, _txn(TransactionType.income, 100, DateTime(2026, 1, 1)));
+    await repository.add(uid, _txn(TransactionType.income, 200, DateTime(2026, 1, 2)));
+    await repository.add('other-user', _txn(TransactionType.income, 300, DateTime(2026, 1, 3)));
+
+    await repository.deleteAll(uid);
+
+    expect(await repository.watchTransactions(uid).first, isEmpty);
+    expect(await repository.watchTransactions('other-user').first, hasLength(1));
+  });
 }

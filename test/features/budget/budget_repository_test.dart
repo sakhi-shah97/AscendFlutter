@@ -44,4 +44,16 @@ void main() {
     final other = await repository.watchBudget('other-user').first;
     expect(other.monthlyIncome, 0);
   });
+
+  test('reset clears a saved budget back to empty', () async {
+    await repository.save(
+      uid,
+      const BudgetConfig(monthlyIncome: 5000, fixedCosts: [], variableCosts: []),
+    );
+
+    await repository.reset(uid);
+
+    final config = await repository.watchBudget(uid).first;
+    expect(config.monthlyIncome, 0);
+  });
 }

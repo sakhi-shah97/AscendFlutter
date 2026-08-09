@@ -17,4 +17,8 @@ class UserProfileRepository {
               snapshot.data() == null ? null : UserProfile.fromFirestore(uid, snapshot.data()!),
         );
   }
+
+  Future<void> updateCurrency(String uid, String currency) {
+    return _doc(uid).update({'currency': currency});
+  }
 }

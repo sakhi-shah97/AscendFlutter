@@ -37,6 +37,10 @@ class TransactionController {
   Future<void> delete(String transactionId) {
     return _ref.read(transactionRepositoryProvider).delete(_uid, transactionId);
   }
+
+  Future<void> deleteAll() {
+    return _ref.read(transactionRepositoryProvider).deleteAll(_uid);
+  }
 }
 
 final transactionControllerProvider = Provider<TransactionController>((ref) {

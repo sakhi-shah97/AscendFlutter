@@ -23,4 +23,8 @@ class BudgetRepository {
   Future<void> save(String uid, BudgetConfig config) {
     return _doc(uid).set(config.toFirestore());
   }
+
+  Future<void> reset(String uid) {
+    return _doc(uid).delete();
+  }
 }

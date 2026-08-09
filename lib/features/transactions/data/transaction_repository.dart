@@ -32,4 +32,13 @@ class TransactionRepository {
   Future<void> delete(String uid, String transactionId) {
     return _collection(uid).doc(transactionId).delete();
   }
+
+  Future<void> deleteAll(String uid) async {
+    final snapshot = await _collection(uid).get();
+    final batch = _firestore.batch();
+    for (final doc in snapshot.docs) {
+      batch.delete(doc.reference);
+    }
+    await batch.commit();
+  }
 }

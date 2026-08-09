@@ -21,3 +21,22 @@ final currencyProvider = Provider<String>((ref) {
   final currency = ref.watch(userProfileProvider).value?.currency;
   return (currency != null && currency.isNotEmpty) ? currency : 'AED';
 });
+
+class UserProfileController {
+  UserProfileController(this._ref);
+  final Ref _ref;
+
+  String get _uid {
+    final user = _ref.read(authStateChangesProvider).value;
+    if (user == null) throw StateError('No signed-in user.');
+    return user.uid;
+  }
+
+  Future<void> updateCurrency(String currency) {
+    return _ref.read(userProfileRepositoryProvider).updateCurrency(_uid, currency);
+  }
+}
+
+final userProfileControllerProvider = Provider<UserProfileController>((ref) {
+  return UserProfileController(ref);
+});

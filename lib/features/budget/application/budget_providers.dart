@@ -29,6 +29,10 @@ class BudgetController {
   Future<void> save(BudgetConfig config) {
     return _ref.read(budgetRepositoryProvider).save(_uid, config);
   }
+
+  Future<void> reset() {
+    return _ref.read(budgetRepositoryProvider).reset(_uid);
+  }
 }
 
 final budgetControllerProvider = Provider<BudgetController>((ref) {
