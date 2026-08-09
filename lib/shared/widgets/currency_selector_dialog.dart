@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/utils/currency.dart';
+import '../../core/theme/app_colors.dart';
+import '../../core/utils/currency.dart';
 
 /// Shows the currency picker. Returns the selected ISO 4217 code, or null
-/// if dismissed without a choice.
+/// if dismissed without a choice. Used both by Settings and by the
+/// first-run currency prompt.
 Future<String?> showCurrencySelectorDialog(BuildContext context, {required String current}) {
   return showDialog<String>(
     context: context,

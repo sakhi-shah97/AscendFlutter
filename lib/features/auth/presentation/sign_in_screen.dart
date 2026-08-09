@@ -6,6 +6,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../shared/widgets/app_text_field.dart';
 import '../application/auth_providers.dart';
 import 'auth_utils.dart';
+import 'first_run.dart';
 import 'widgets/google_sign_in_button.dart';
 
 class SignInScreen extends ConsumerStatefulWidget {
@@ -33,6 +34,13 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
           email: _emailController.text.trim(),
           password: _passwordController.text,
         );
+  }
+
+  Future<void> _handleGoogleSignIn() async {
+    final isNewUser = await ref.read(authControllerProvider.notifier).signInWithGoogle();
+    if (!mounted) return;
+    if (ref.read(authControllerProvider).hasError) return;
+    await promptForCurrencyIfNewUser(context, ref, isNewUser: isNewUser);
   }
 
   void _forgotPassword() {
@@ -140,11 +148,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                     ),
                     const SizedBox(height: 20),
                     GoogleSignInButton(
-                      onPressed: isLoading
-                          ? null
-                          : () => ref
-                              .read(authControllerProvider.notifier)
-                              .signInWithGoogle(),
+                      onPressed: isLoading ? null : _handleGoogleSignIn,
                     ),
                     const SizedBox(height: 24),
                     Wrap(

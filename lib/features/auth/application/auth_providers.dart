@@ -44,17 +44,22 @@ class AuthController extends AsyncNotifier<void> {
     );
   }
 
-  Future<void> signInWithGoogle() async {
+  /// Returns whether this sign-in created a brand-new account (see
+  /// [AuthRepository.signInWithGoogle]) — the caller uses this to decide
+  /// whether to prompt for a currency choice. False on any error/cancel.
+  Future<bool> signInWithGoogle() async {
     state = const AsyncLoading();
+    var isNewUser = false;
     state = await AsyncValue.guard(() async {
       try {
-        await _repository.signInWithGoogle();
+        isNewUser = await _repository.signInWithGoogle();
       } on GoogleSignInException catch (e) {
         // A user-dismissed picker isn't an error worth surfacing.
         if (e.code == GoogleSignInExceptionCode.canceled) return;
         rethrow;
       }
     });
+    return isNewUser;
   }
 
   Future<void> sendPasswordResetEmail(String email) async {

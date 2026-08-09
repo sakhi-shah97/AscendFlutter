@@ -6,6 +6,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../shared/widgets/app_text_field.dart';
 import '../application/auth_providers.dart';
 import 'auth_utils.dart';
+import 'first_run.dart';
 import 'widgets/google_sign_in_button.dart';
 
 class SignUpScreen extends ConsumerStatefulWidget {
@@ -29,12 +30,24 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
     super.dispose();
   }
 
-  void _submit() {
+  Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
-    ref.read(authControllerProvider.notifier).signUpWithEmail(
+    await ref.read(authControllerProvider.notifier).signUpWithEmail(
           email: _emailController.text.trim(),
           password: _passwordController.text,
         );
+    if (!mounted) return;
+    if (ref.read(authControllerProvider).hasError) return;
+    // Email sign-up always creates a brand-new account (an existing email
+    // fails with email-already-in-use, caught by hasError above).
+    await promptForCurrencyIfNewUser(context, ref, isNewUser: true);
+  }
+
+  Future<void> _handleGoogleSignIn() async {
+    final isNewUser = await ref.read(authControllerProvider.notifier).signInWithGoogle();
+    if (!mounted) return;
+    if (ref.read(authControllerProvider).hasError) return;
+    await promptForCurrencyIfNewUser(context, ref, isNewUser: isNewUser);
   }
 
   String? _validateConfirmPassword(String? value) {
@@ -135,11 +148,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                     ),
                     const SizedBox(height: 20),
                     GoogleSignInButton(
-                      onPressed: isLoading
-                          ? null
-                          : () => ref
-                              .read(authControllerProvider.notifier)
-                              .signInWithGoogle(),
+                      onPressed: isLoading ? null : _handleGoogleSignIn,
                     ),
                     const SizedBox(height: 24),
                     Wrap(

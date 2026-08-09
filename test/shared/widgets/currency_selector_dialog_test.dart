@@ -3,7 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:ascend/core/theme/app_theme.dart';
 import 'package:ascend/core/utils/currency.dart';
-import 'package:ascend/features/settings/presentation/widgets/currency_selector_dialog.dart';
+import 'package:ascend/shared/widgets/currency_selector_dialog.dart';
 
 void main() {
   Widget harness(void Function(BuildContext) onPressed) {

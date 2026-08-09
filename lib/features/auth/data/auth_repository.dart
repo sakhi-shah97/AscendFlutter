@@ -3,6 +3,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:google_sign_in/google_sign_in.dart';
 
+import '../../../shared/models/budget_config.dart';
+
 /// Wraps Firebase Auth + Google Sign-In and keeps the /users/{uid} profile
 /// document in sync with the authenticated account.
 class AuthRepository {
@@ -43,10 +45,18 @@ class AuthRepository {
   /// strict Cross-Origin-Opener-Policy headers such as those on proxied dev
   /// domains), while mobile uses the native authenticate() flow and
   /// exchanges the ID token with Firebase.
-  Future<void> signInWithGoogle() async {
+  ///
+  /// Returns whether this created a brand-new account, so the caller can
+  /// decide whether to prompt for a currency choice. Always false on web:
+  /// signInWithRedirect navigates away immediately, so there's no result to
+  /// inspect here — consumeRedirectResult() finishes the sign-in after the
+  /// app reloads, by which point there's no inline UI moment left to prompt
+  /// in, so new web users just keep the AED default (changeable later in
+  /// Settings).
+  Future<bool> signInWithGoogle() async {
     if (kIsWeb) {
       await _auth.signInWithRedirect(GoogleAuthProvider());
-      return;
+      return false;
     }
 
     if (!_googleSignInInitialized) {
@@ -58,6 +68,7 @@ class AuthRepository {
     final credential = GoogleAuthProvider.credential(idToken: idToken);
     final userCredential = await _auth.signInWithCredential(credential);
     await _ensureUserProfile(userCredential.user!);
+    return userCredential.additionalUserInfo?.isNewUser ?? false;
   }
 
   /// Completes a web signInWithRedirect flow after the page reloads.
@@ -93,5 +104,6 @@ class AuthRepository {
       'currency': 'AED',
       'createdAt': FieldValue.serverTimestamp(),
     });
+    await ref.collection('budget').doc('config').set(BudgetConfig.defaultSeed.toFirestore());
   }
 }

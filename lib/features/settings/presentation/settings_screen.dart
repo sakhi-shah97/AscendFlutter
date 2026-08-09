@@ -3,11 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../shared/providers/user_profile_providers.dart';
+import '../../../shared/widgets/currency_selector_dialog.dart';
 import '../../auth/application/auth_providers.dart';
 import '../../budget/application/budget_providers.dart';
 import '../../transactions/application/transaction_providers.dart';
 import 'rank_thresholds_screen.dart';
-import 'widgets/currency_selector_dialog.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
