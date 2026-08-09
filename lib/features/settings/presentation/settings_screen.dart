@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../shared/providers/user_profile_providers.dart';
 import '../../../shared/widgets/currency_selector_dialog.dart';
+import '../../../shared/widgets/press_scale.dart';
 import '../../auth/application/auth_providers.dart';
 import '../../budget/application/budget_providers.dart';
 import '../../transactions/application/transaction_providers.dart';
@@ -55,21 +56,25 @@ class SettingsScreen extends ConsumerWidget {
       appBar: AppBar(title: const Text('Settings')),
       body: ListView(
         children: [
-          ListTile(
-            title: const Text('Currency'),
-            trailing: Text(currency, style: Theme.of(context).textTheme.titleMedium),
+          PressScale(
             onTap: () async {
               final selected = await showCurrencySelectorDialog(context, current: currency);
               if (selected != null && selected != currency) {
                 await ref.read(userProfileControllerProvider).updateCurrency(selected);
               }
             },
+            child: ListTile(
+              title: const Text('Currency'),
+              trailing: Text(currency, style: Theme.of(context).textTheme.titleMedium),
+            ),
           ),
-          ListTile(
-            title: const Text('Rank thresholds'),
-            trailing: const Icon(Icons.chevron_right, color: AppColors.textMuted),
+          PressScale(
             onTap: () => Navigator.of(context).push(
               MaterialPageRoute(builder: (context) => const RankThresholdsScreen()),
+            ),
+            child: ListTile(
+              title: const Text('Rank thresholds'),
+              trailing: const Icon(Icons.chevron_right, color: AppColors.textMuted),
             ),
           ),
           const Divider(),

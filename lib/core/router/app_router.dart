@@ -12,6 +12,7 @@ import '../../features/auth/presentation/sign_up_screen.dart';
 import '../../features/budget/presentation/budget_screen.dart';
 import '../../features/dashboard/presentation/dashboard_shell.dart';
 import '../../features/dashboard/presentation/home_screen.dart';
+import '../../features/rank/presentation/rank_detail_screen.dart';
 import '../../features/settings/presentation/settings_screen.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
@@ -36,7 +37,16 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         branches: [
           StatefulShellBranch(
             routes: [
-              GoRoute(path: '/home', builder: (context, state) => const HomeScreen()),
+              GoRoute(
+                path: '/home',
+                builder: (context, state) => const HomeScreen(),
+                routes: [
+                  GoRoute(
+                    path: 'rank',
+                    builder: (context, state) => const RankDetailScreen(),
+                  ),
+                ],
+              ),
             ],
           ),
           StatefulShellBranch(

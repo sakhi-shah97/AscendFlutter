@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/utils/currency.dart';
+import '../../../../shared/widgets/animated_currency_text.dart';
+import '../../../../shared/widgets/press_scale.dart';
 
 /// Fixed/variable cost summary on Home, tappable through to the Budget tab.
 class BudgetSummaryCard extends StatelessWidget {
@@ -24,7 +25,7 @@ class BudgetSummaryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: InkWell(
+      child: PressScale(
         onTap: onTap,
         borderRadius: BorderRadius.circular(16),
         child: Padding(
@@ -40,12 +41,23 @@ class BudgetSummaryCard extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 12),
-              _Row(label: 'Fixed', value: formatCurrency(fixedTotal, currency)),
+              _Row(
+                label: 'Fixed',
+                child: AnimatedCurrencyText(
+                  amount: fixedTotal,
+                  currency: currency,
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+              ),
               const SizedBox(height: 6),
               _Row(
                 label: 'Variable (spent / budget)',
-                value:
-                    '${formatCurrency(variableSpentTotal, currency)} / ${formatCurrency(variableBudgetTotal, currency)}',
+                child: AnimatedCurrencyRatioText(
+                  numerator: variableSpentTotal,
+                  denominator: variableBudgetTotal,
+                  currency: currency,
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
               ),
             ],
           ),
@@ -56,10 +68,10 @@ class BudgetSummaryCard extends StatelessWidget {
 }
 
 class _Row extends StatelessWidget {
-  const _Row({required this.label, required this.value});
+  const _Row({required this.label, required this.child});
 
   final String label;
-  final String value;
+  final Widget child;
 
   @override
   Widget build(BuildContext context) {
@@ -68,7 +80,7 @@ class _Row extends StatelessWidget {
       children: [
         Text(label, style: Theme.of(context).textTheme.bodyMedium),
         const SizedBox(height: 2),
-        Text(value, style: Theme.of(context).textTheme.titleMedium),
+        child,
       ],
     );
   }

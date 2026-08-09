@@ -3,11 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
-import '../../../core/utils/currency.dart';
 import '../../../shared/models/app_transaction.dart';
 import '../../../shared/models/budget_config.dart';
 import '../../../shared/models/cost_item.dart';
 import '../../../shared/providers/user_profile_providers.dart';
+import '../../../shared/widgets/animated_currency_text.dart';
+import '../../../shared/widgets/press_scale.dart';
 import '../../transactions/application/transaction_providers.dart';
 import '../application/budget_calculations.dart';
 import '../application/budget_providers.dart';
@@ -145,15 +146,17 @@ class _SummaryCard extends StatelessWidget {
           children: [
             Text('Free cash remaining', style: Theme.of(context).textTheme.bodyMedium),
             const SizedBox(height: 4),
-            Text(
-              '${isNegative ? '−' : ''}${formatCurrency(remaining.abs(), currency)}',
+            AnimatedCurrencyText(
+              amount: remaining,
+              currency: currency,
+              showMinusSign: true,
               style: AppTypography.numeric(
                 size: 32,
                 color: isNegative ? AppColors.brick : AppColors.goldHigh,
               ),
             ),
             const SizedBox(height: 16),
-            InkWell(
+            PressScale(
               onTap: onEditIncome,
               borderRadius: BorderRadius.circular(8),
               child: Row(
@@ -162,8 +165,9 @@ class _SummaryCard extends StatelessWidget {
                   Text('Monthly income', style: Theme.of(context).textTheme.bodyMedium),
                   Row(
                     children: [
-                      Text(
-                        formatCurrency(income, currency),
+                      AnimatedCurrencyText(
+                        amount: income,
+                        currency: currency,
                         style: Theme.of(context).textTheme.titleMedium,
                       ),
                       const SizedBox(width: 4),

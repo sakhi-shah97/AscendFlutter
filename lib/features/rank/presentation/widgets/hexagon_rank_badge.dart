@@ -7,37 +7,51 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/motion.dart';
 import '../../application/rank_tier.dart';
 
+/// Shared [Hero] tag between the Home badge and [RankDetailScreen].
+const rankBadgeHeroTag = 'rank-badge';
+
 /// The signature hexagon rank badge. Re-plays its spring/overshoot entrance
 /// whenever the resolved tier changes (i.e. a rank-up), since it's keyed by
 /// tier identity.
 class HexagonRankBadge extends StatelessWidget {
-  const HexagonRankBadge({super.key, required this.netWorth, this.size = 140});
+  const HexagonRankBadge({super.key, required this.netWorth, this.size = 140, this.heroTag});
 
   /// Net Financial Level (total savings − total debt), in AED.
   final double netWorth;
   final double size;
+
+  /// When set, wraps just the hexagon (not the label below it) in a [Hero]
+  /// with this tag — used to fly it into [RankDetailScreen].
+  final Object? heroTag;
 
   @override
   Widget build(BuildContext context) {
     final tier = RankTier.forNetWorth(netWorth);
     final color = tier?.color ?? AppColors.textMuted;
 
+    Widget hexagon = SizedBox(
+      width: size,
+      height: size,
+      child: CustomPaint(painter: _HexagonPainter(color: color)),
+    )
+        .animate(key: ValueKey(tier?.displayName ?? 'unranked'))
+        .scale(
+          begin: const Offset(0.6, 0.6),
+          end: const Offset(1, 1),
+          duration: AppMotion.rankUpDuration,
+          curve: AppMotion.springOvershoot,
+        )
+        .fadeIn(duration: AppMotion.standardDuration);
+
+    final tag = heroTag;
+    if (tag != null) {
+      hexagon = Hero(tag: tag, child: hexagon);
+    }
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        SizedBox(
-          width: size,
-          height: size,
-          child: CustomPaint(painter: _HexagonPainter(color: color)),
-        )
-            .animate(key: ValueKey(tier?.displayName ?? 'unranked'))
-            .scale(
-              begin: const Offset(0.6, 0.6),
-              end: const Offset(1, 1),
-              duration: AppMotion.rankUpDuration,
-              curve: AppMotion.springOvershoot,
-            )
-            .fadeIn(duration: AppMotion.standardDuration),
+        hexagon,
         const SizedBox(height: 16),
         Text(
           tier?.displayName ?? 'Unranked',

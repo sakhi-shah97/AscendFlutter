@@ -3,9 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
-import '../../../../core/utils/currency.dart';
 import '../../../../shared/models/cost_item.dart';
 import '../../../../shared/providers/user_profile_providers.dart';
+import '../../../../shared/widgets/animated_currency_text.dart';
+import '../../../../shared/widgets/press_scale.dart';
 import 'cost_item_form_dialog.dart';
 
 /// A single editable list of costs — used for both the fixed and variable
@@ -46,7 +47,11 @@ class CostListSection extends ConsumerWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(title, style: Theme.of(context).textTheme.titleLarge),
-                Text(formatCurrency(total, currency), style: AppTypography.numeric(size: 16)),
+                AnimatedCurrencyText(
+                  amount: total,
+                  currency: currency,
+                  style: AppTypography.numeric(size: 16),
+                ),
               ],
             ),
             const SizedBox(height: 8),
@@ -110,7 +115,11 @@ class _CostRow extends StatelessWidget {
         (spent != null && item.amount > 0) ? (spent! / item.amount).clamp(0, 1).toDouble() : null;
     final overBudget = spent != null && spent! > item.amount;
 
-    return InkWell(
+    final amountStyle = Theme.of(context).textTheme.bodyMedium?.copyWith(
+          color: overBudget ? AppColors.brick : AppColors.textSecondary,
+        );
+
+    return PressScale(
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),
       child: Padding(
@@ -122,14 +131,18 @@ class _CostRow extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(item.name, style: Theme.of(context).textTheme.bodyLarge),
-                Text(
-                  spent != null
-                      ? '${formatCurrency(spent!, currency)} / ${formatCurrency(item.amount, currency)}'
-                      : formatCurrency(item.amount, currency),
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: overBudget ? AppColors.brick : AppColors.textSecondary,
+                spent != null
+                    ? AnimatedCurrencyRatioText(
+                        numerator: spent!,
+                        denominator: item.amount,
+                        currency: currency,
+                        style: amountStyle,
+                      )
+                    : AnimatedCurrencyText(
+                        amount: item.amount,
+                        currency: currency,
+                        style: amountStyle,
                       ),
-                ),
               ],
             ),
             if (progress != null) ...[

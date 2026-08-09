@@ -7,6 +7,7 @@ import '../../../shared/providers/user_profile_providers.dart';
 import '../../auth/application/auth_providers.dart';
 import '../../budget/application/budget_calculations.dart';
 import '../../budget/application/budget_providers.dart';
+import '../../../shared/widgets/press_scale.dart';
 import '../../rank/application/net_worth_provider.dart';
 import '../../rank/presentation/widgets/hexagon_rank_badge.dart';
 import '../../transactions/application/transaction_aggregates.dart';
@@ -22,10 +23,20 @@ class HomeScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final transactionsAsync = ref.watch(transactionsProvider);
+    final budgetAsync = ref.watch(budgetProvider);
+
+    if (transactionsAsync.isLoading && !transactionsAsync.hasValue) {
+      return const _HomeLoading();
+    }
+    if (transactionsAsync.hasError && !transactionsAsync.hasValue) {
+      return const _HomeError();
+    }
+
     final user = ref.watch(authStateChangesProvider).value;
     final netWorth = ref.watch(netWorthProvider);
-    final transactions = ref.watch(transactionsProvider).value ?? const [];
-    final budget = ref.watch(budgetProvider).value;
+    final transactions = transactionsAsync.value ?? const [];
+    final budget = budgetAsync.value;
     final currency = ref.watch(currencyProvider);
     final displayName = user?.displayName;
     final greetingName = (displayName != null && displayName.isNotEmpty)
@@ -50,7 +61,13 @@ class HomeScreen extends ConsumerWidget {
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(color: AppColors.text),
               ),
             ),
-            Center(child: HexagonRankBadge(netWorth: netWorth)),
+            Center(
+              child: PressScale(
+                onTap: () => context.push('/home/rank'),
+                borderRadius: BorderRadius.circular(24),
+                child: HexagonRankBadge(netWorth: netWorth, heroTag: rankBadgeHeroTag),
+              ),
+            ),
             const SizedBox(height: 8),
             _SectionCard(
               title: 'Net worth trajectory',
@@ -71,12 +88,91 @@ class HomeScreen extends ConsumerWidget {
                 variableSpentTotal: variableSpend,
                 currency: currency,
                 onTap: () => context.go('/budget'),
-              ),
+              )
+            else if (budgetAsync.hasError)
+              const _InlineErrorCard(message: "Couldn't load your budget.")
+            else
+              const _SectionLoadingCard(),
             RecentActivityCard(
               transactions: transactions,
               onViewAll: () => context.go('/activity'),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _HomeLoading extends StatelessWidget {
+  const _HomeLoading();
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Ascend')),
+      body: const Center(child: CircularProgressIndicator()),
+    );
+  }
+}
+
+class _HomeError extends StatelessWidget {
+  const _HomeError();
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Ascend')),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Text(
+            "Couldn't load your dashboard. Check your connection and try again.",
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// A stand-in for [BudgetSummaryCard] while the budget doc is still loading.
+class _SectionLoadingCard extends StatelessWidget {
+  const _SectionLoadingCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Card(
+      margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Padding(
+        padding: EdgeInsets.all(24),
+        child: Center(
+          child: SizedBox(
+            width: 20,
+            height: 20,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _InlineErrorCard extends StatelessWidget {
+  const _InlineErrorCard({required this.message});
+
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Text(
+          message,
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppColors.textMuted),
         ),
       ),
     );

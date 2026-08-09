@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
-import '../../../../core/utils/currency.dart';
+import '../../../../shared/widgets/animated_currency_text.dart';
 
 class SavingsDebtChart extends StatelessWidget {
   const SavingsDebtChart({
@@ -63,8 +63,8 @@ class SavingsDebtChart extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
-            _Legend(color: AppColors.jade, label: 'Savings', value: formatCurrency(savings, currency)),
-            _Legend(color: AppColors.brick, label: 'Debt', value: formatCurrency(debt, currency)),
+            _Legend(color: AppColors.jade, label: 'Savings', amount: savings, currency: currency),
+            _Legend(color: AppColors.brick, label: 'Debt', amount: debt, currency: currency),
           ],
         ),
       ],
@@ -73,11 +73,12 @@ class SavingsDebtChart extends StatelessWidget {
 }
 
 class _Legend extends StatelessWidget {
-  const _Legend({required this.color, required this.label, required this.value});
+  const _Legend({required this.color, required this.label, required this.amount, required this.currency});
 
   final Color color;
   final String label;
-  final String value;
+  final double amount;
+  final String currency;
 
   @override
   Widget build(BuildContext context) {
@@ -96,7 +97,11 @@ class _Legend extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 4),
-        Text(value, style: AppTypography.numeric(size: 14, color: color)),
+        AnimatedCurrencyText(
+          amount: amount,
+          currency: currency,
+          style: AppTypography.numeric(size: 14, color: color),
+        ),
       ],
     );
   }
