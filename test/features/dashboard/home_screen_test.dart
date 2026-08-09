@@ -13,7 +13,7 @@ void main() {
         child: MaterialApp(theme: AppTheme.dark, home: const HomeScreen()),
       ),
     );
-    await tester.pumpAndSettle();
+    await tester.pump(const Duration(seconds: 1));
 
     expect(find.text('Unranked'), findsOneWidget);
   });
@@ -25,7 +25,7 @@ void main() {
         child: MaterialApp(theme: AppTheme.dark, home: const HomeScreen()),
       ),
     );
-    await tester.pumpAndSettle();
+    await tester.pump(const Duration(seconds: 1));
 
     expect(find.text('Gold I'), findsOneWidget);
   });
@@ -36,7 +36,7 @@ void main() {
         child: MaterialApp(theme: AppTheme.dark, home: const HomeScreen()),
       ),
     );
-    await tester.pumpAndSettle();
+    await tester.pump(const Duration(seconds: 1));
 
     expect(find.textContaining('Welcome, ascender'), findsOneWidget);
   });
@@ -52,7 +52,7 @@ void main() {
         child: MaterialApp(theme: AppTheme.dark, home: const HomeScreen()),
       ),
     );
-    await tester.pumpAndSettle();
+    await tester.pump(const Duration(seconds: 1));
 
     expect(find.text('Net worth trajectory'), findsOneWidget);
     expect(find.text('Savings vs. debt'), findsOneWidget);

@@ -8,10 +8,10 @@ class AppTheme {
   static ThemeData get dark {
     return ThemeData(
       useMaterial3: true,
-      brightness: Brightness.dark,
+      brightness: Brightness.light,
       scaffoldBackgroundColor: AppColors.bg,
       canvasColor: AppColors.bg,
-      colorScheme: const ColorScheme.dark(
+      colorScheme: const ColorScheme.light(
         primary: AppColors.gold,
         secondary: AppColors.jade,
         error: AppColors.brick,

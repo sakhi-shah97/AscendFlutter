@@ -23,20 +23,103 @@ enum RankGroup {
         RankGroup.radiant => 'Radiant',
       };
 
-  /// Base hue for this group's hexagon. Gold and Ascendant intentionally
-  /// reuse the app's existing gold/jade accents to tie the rank system into
-  /// the wider design system.
+  /// Accent hue for this group — used for text/icons/progress fill, and as
+  /// the gem's "base" facet color. Tuned to stay legible against the cream
+  /// app background, which rules out literally icy/near-white swatches for
+  /// silver and platinum (those live in [facetGradients] instead, where a
+  /// bounded gem shape can carry much lighter tones than flat text can).
   Color get color => switch (this) {
-        RankGroup.wood => const Color(0xFF8B6F47),
-        RankGroup.copper => const Color(0xFFB5651D),
-        RankGroup.bronze => const Color(0xFFB08D57),
-        RankGroup.silver => const Color(0xFFB9C0C7),
-        RankGroup.gold => const Color(0xFFC7972C),
-        RankGroup.diamond => const Color(0xFF6EC3E0),
-        RankGroup.platinum => const Color(0xFFD8DCE0),
-        RankGroup.ascendant => const Color(0xFF3FAE7C),
-        RankGroup.radiant => const Color(0xFFF2CB6B),
+        RankGroup.wood => const Color(0xFF6B5636),
+        RankGroup.copper => const Color(0xFFA85A1D),
+        RankGroup.bronze => const Color(0xFF8C6B3D),
+        RankGroup.silver => const Color(0xFF7C8792),
+        RankGroup.gold => const Color(0xFFB8842A),
+        RankGroup.diamond => const Color(0xFF2A5A6B),
+        RankGroup.platinum => const Color(0xFF8FA0AA),
+        RankGroup.ascendant => const Color(0xFF2F8F5C),
+        RankGroup.radiant => const Color(0xFFB84FC7),
       };
+
+  /// Six 2-stop linear gradients for the faceted gem badge, in facet order
+  /// [top, upperRight, lowerRight, bottom, lowerLeft, upperLeft] (each facet
+  /// named for the first outer vertex it spans, matching the hexagon's
+  /// vertex winding). Gold and Diamond are hand-authored; Diamond is a cool
+  /// icy-crystal palette rather than a shade of [color]. Radiant shifts hue
+  /// per facet for a prismatic effect; every other tier reuses the same
+  /// single-hue light-to-dark shading technique as Gold, seeded from
+  /// [color].
+  List<List<Color>> get facetGradients => switch (this) {
+        RankGroup.gold => const [
+            [Color(0xFFB8842A), Color(0xFFFBE8B8)],
+            [Color(0xFFE8B84B), Color(0xFF9C6D1F)],
+            [Color(0xFF9C6D1F), Color(0xFF6B4A15)],
+            [Color(0xFF8A5F1B), Color(0xFF573C11)],
+            [Color(0xFF7A5518), Color(0xFFB8842A)],
+            [Color(0xFFE8B84B), Color(0xFFFDF3D9)],
+          ],
+        RankGroup.diamond => const [
+            [Color(0xFF7FC4E3), Color(0xFFFFFFFF)],
+            [Color(0xFFC9E8F5), Color(0xFF4A8FA8)],
+            [Color(0xFF4A8FA8), Color(0xFF2A5A6B)],
+            [Color(0xFF3D7A94), Color(0xFF1F4552)],
+            [Color(0xFF2A5A6B), Color(0xFF7FC4E3)],
+            [Color(0xFFC9E8F5), Color(0xFFFFFFFF)],
+          ],
+        RankGroup.radiant => prismaticFacetGradients(),
+        _ => singleHueFacetGradients(color),
+      };
+
+  /// True for the tier that gets the extra diamond-fire twinkle dots.
+  bool get hasTwinkle => this == RankGroup.diamond;
+}
+
+/// Per-facet lightness deltas (relative to a seed color's own HSL lightness)
+/// that reproduce the Gold tier's hand-authored shading — derived by
+/// measuring Gold's own facet colors against its base. Order matches
+/// [RankGroup.facetGradients]: top, upperRight, lowerRight, bottom,
+/// lowerLeft, upperLeft; each pair is [nearStop, farStop] running from
+/// center-side to outer-edge-side of the facet.
+const _facetLightnessDeltas = [
+  [0.0, 0.410],
+  [0.159, -0.076],
+  [-0.076, -0.192],
+  [-0.119, -0.239],
+  [-0.157, 0.0],
+  [0.159, 0.479],
+];
+
+/// Shades [base] light-to-dark across all six facets using
+/// [_facetLightnessDeltas], keeping hue and saturation constant — the
+/// "single hue shaded light to dark" technique used by most tiers.
+List<List<Color>> singleHueFacetGradients(Color base) {
+  final hsl = HSLColor.fromColor(base);
+  Color at(double delta) =>
+      hsl.withLightness((hsl.lightness + delta).clamp(0.05, 0.97)).toColor();
+  return [
+    for (final pair in _facetLightnessDeltas)
+      [
+        pair[0] == 0.0 ? base : at(pair[0]),
+        pair[1] == 0.0 ? base : at(pair[1]),
+      ],
+  ];
+}
+
+/// Same shading technique as [singleHueFacetGradients], but each facet gets
+/// its own hue stepped around the color wheel for Radiant's prismatic gem.
+List<List<Color>> prismaticFacetGradients() {
+  const hues = [45.0, 330.0, 280.0, 220.0, 170.0, 100.0];
+  const saturation = 0.70;
+  const baseLightness = 0.50;
+  Color at(double hue, double delta) => HSLColor.fromAHSL(
+        1,
+        hue,
+        saturation,
+        (baseLightness + delta).clamp(0.05, 0.97),
+      ).toColor();
+  return [
+    for (var i = 0; i < 6; i++)
+      [at(hues[i], _facetLightnessDeltas[i][0]), at(hues[i], _facetLightnessDeltas[i][1])],
+  ];
 }
 
 /// A single named tier (e.g. "Wood I") with its all-time AED threshold.

@@ -19,7 +19,7 @@ void main() {
         child: MaterialApp(theme: AppTheme.dark, home: const RankDetailScreen()),
       ),
     );
-    await tester.pumpAndSettle();
+    await tester.pump(const Duration(seconds: 1));
 
     expect(find.text('Gold I'), findsWidgets);
     expect(find.text('AED 800,000.00'), findsOneWidget);
@@ -36,7 +36,7 @@ void main() {
         child: MaterialApp(theme: AppTheme.dark, home: const RankDetailScreen()),
       ),
     );
-    await tester.pumpAndSettle();
+    await tester.pump(const Duration(seconds: 1));
 
     expect(find.text('Max rank reached.'), findsOneWidget);
   });
@@ -47,7 +47,7 @@ void main() {
         child: MaterialApp(theme: AppTheme.dark, home: const RankDetailScreen()),
       ),
     );
-    await tester.pumpAndSettle();
+    await tester.pump(const Duration(seconds: 1));
 
     expect(find.text('Unranked'), findsWidgets);
     expect(find.text('Next: Wood I'), findsOneWidget);
