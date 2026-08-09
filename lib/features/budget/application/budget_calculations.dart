@@ -17,6 +17,22 @@ double freeCashRemaining(BudgetConfig budget, List<AppTransaction> transactions,
   return budget.monthlyIncome - budget.fixedCostsTotal - variableSpend;
 }
 
+/// Fixed costs plus what's actually been spent on variable expenses so
+/// far this calendar month — the real, lived-in expense figure (as
+/// opposed to [BudgetConfig.variableBudgetTotal], which is only the plan).
+/// Used by the Momentum score's savings-rate and emergency-fund
+/// components.
+double totalMonthlyExpenses(BudgetConfig budget, List<AppTransaction> transactions, DateTime now) {
+  final window = currentMonthWindow(now);
+  final variableSpend = totalForType(
+    transactions,
+    TransactionType.variableExpense,
+    from: window.start,
+    to: window.end,
+  );
+  return budget.fixedCostsTotal + variableSpend;
+}
+
 /// Category → spend for variable expenses in the current calendar month,
 /// for the Budget tab's spend chart.
 Map<String, double> variableSpendThisMonth(List<AppTransaction> transactions, DateTime now) {

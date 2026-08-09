@@ -4,16 +4,18 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../shared/providers/user_profile_providers.dart';
+import '../../accounts/application/savings_account_migration.dart';
 import '../../auth/application/auth_providers.dart';
 import '../../budget/application/budget_calculations.dart';
 import '../../budget/application/budget_providers.dart';
-import '../../../shared/widgets/press_scale.dart';
+import '../../momentum/application/momentum_providers.dart';
+import '../../momentum/presentation/widgets/momentum_hero.dart';
 import '../../rank/application/net_worth_provider.dart';
-import '../../rank/presentation/widgets/hexagon_rank_badge.dart';
 import '../../transactions/application/transaction_aggregates.dart';
 import '../../transactions/application/transaction_providers.dart';
 import '../application/net_worth_projection.dart';
 import 'widgets/budget_summary_card.dart';
+import 'widgets/level_banner_strip.dart';
 import 'widgets/net_worth_chart.dart';
 import 'widgets/recent_activity_card.dart';
 import 'widgets/savings_debt_chart.dart';
@@ -33,8 +35,14 @@ class HomeScreen extends ConsumerWidget {
       return const _HomeError();
     }
 
+    // Fire-and-forget: ensures a default cash savings account exists (and
+    // any pre-accounts savings history is linked to it) before Momentum
+    // needs the cash/invested split.
+    ref.watch(savingsAccountMigrationProvider);
+
     final user = ref.watch(authStateChangesProvider).value;
     final netWorth = ref.watch(netWorthProvider);
+    final momentum = ref.watch(momentumProvider);
     final transactions = transactionsAsync.value ?? const [];
     final budget = budgetAsync.value;
     final currency = ref.watch(currencyProvider);
@@ -61,13 +69,9 @@ class HomeScreen extends ConsumerWidget {
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(color: AppColors.text),
               ),
             ),
-            Center(
-              child: PressScale(
-                onTap: () => context.push('/home/rank'),
-                borderRadius: BorderRadius.circular(24),
-                child: HexagonRankBadge(netWorth: netWorth, heroTag: rankBadgeHeroTag),
-              ),
-            ),
+            DashboardStatStrip(children: const [NetLevelPill()]),
+            const SizedBox(height: 12),
+            MomentumHero(breakdown: momentum, netWorth: netWorth, currency: currency),
             const SizedBox(height: 8),
             _SectionCard(
               title: 'Net worth trajectory',

@@ -48,4 +48,33 @@ void main() {
 
     expect(find.byIcon(Icons.delete_outline), findsNothing);
   });
+
+  testWidgets('does not show an account field for a non-savings type', (tester) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(theme: AppTheme.dark, home: const Scaffold(body: TransactionFormSheet())),
+      ),
+    );
+
+    expect(find.widgetWithText(DropdownButtonFormField<String>, 'Account'), findsNothing);
+  });
+
+  testWidgets('shows an account field once a savings type is selected', (tester) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(theme: AppTheme.dark, home: const Scaffold(body: TransactionFormSheet())),
+      ),
+    );
+
+    // The Type dropdown defaults to "Variable expense" — open it and pick
+    // "Savings deposit" instead.
+    await tester.tap(find.text('Variable expense'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Savings deposit').last);
+    await tester.pumpAndSettle();
+
+    // Signed out, so there are no accounts yet — the setup message shows
+    // instead of the (still-empty) dropdown.
+    expect(find.text('Setting up your default savings account…'), findsOneWidget);
+  });
 }

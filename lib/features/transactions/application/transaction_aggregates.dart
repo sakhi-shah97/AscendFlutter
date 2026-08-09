@@ -1,4 +1,5 @@
 import '../../../shared/models/app_transaction.dart';
+import '../../../shared/models/savings_account.dart';
 import '../../../shared/models/transaction_type.dart';
 
 /// A single point on the net worth trajectory chart.
@@ -16,6 +17,45 @@ double totalDebt(List<AppTransaction> transactions) =>
 /// Net Financial Level = total savings − total debt, matching [RankTier].
 double netWorth(List<AppTransaction> transactions) =>
     totalSavings(transactions) - totalDebt(transactions);
+
+/// This account's balance: the net of every savings transaction tagged
+/// with [accountId].
+double accountBalance(List<AppTransaction> transactions, String accountId) {
+  var total = 0.0;
+  for (final txn in transactions) {
+    if (txn.type.kind != TransactionKind.savings || txn.accountId != accountId) continue;
+    total += txn.type.isIncrease ? txn.amount : -txn.amount;
+  }
+  return total;
+}
+
+/// Total savings held in cash-type accounts — the spendable, instantly
+/// accessible portion of [totalSavings]. Savings transactions with no
+/// linked account (pre-migration stragglers) default to cash.
+double totalCashSavings(List<AppTransaction> transactions, List<SavingsAccount> accounts) =>
+    _totalSavingsByType(transactions, accounts, AccountType.cash);
+
+/// Total savings held in investment-type accounts — the complement of
+/// [totalCashSavings] within [totalSavings].
+double totalInvestedSavings(List<AppTransaction> transactions, List<SavingsAccount> accounts) =>
+    _totalSavingsByType(transactions, accounts, AccountType.investment);
+
+double _totalSavingsByType(
+  List<AppTransaction> transactions,
+  List<SavingsAccount> accounts,
+  AccountType type,
+) {
+  final idsOfType = accounts.where((a) => a.type == type).map((a) => a.id).toSet();
+  var total = 0.0;
+  for (final txn in transactions) {
+    if (txn.type.kind != TransactionKind.savings) continue;
+    final belongsToType =
+        txn.accountId != null ? idsOfType.contains(txn.accountId) : type == AccountType.cash;
+    if (!belongsToType) continue;
+    total += txn.type.isIncrease ? txn.amount : -txn.amount;
+  }
+  return total;
+}
 
 double _netForKind(List<AppTransaction> transactions, TransactionKind kind) {
   var total = 0.0;

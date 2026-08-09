@@ -41,4 +41,33 @@ class TransactionRepository {
     }
     await batch.commit();
   }
+
+  /// Stamps [accountId] onto a batch of existing transactions — used by the
+  /// one-time savings-account migration to link pre-accounts savings
+  /// transactions to the newly-created default account.
+  Future<void> backfillAccountId(
+    String uid, {
+    required String accountId,
+    required List<String> transactionIds,
+  }) async {
+    if (transactionIds.isEmpty) return;
+    final batch = _firestore.batch();
+    for (final id in transactionIds) {
+      batch.update(_collection(uid).doc(id), {'accountId': accountId});
+    }
+    await batch.commit();
+  }
+
+  /// Un-tags a batch of transactions from a deleted account, so their
+  /// amounts fall back to counting as cash (the default for unassigned
+  /// savings transactions) rather than disappearing from every account
+  /// total.
+  Future<void> clearAccountId(String uid, List<String> transactionIds) async {
+    if (transactionIds.isEmpty) return;
+    final batch = _firestore.batch();
+    for (final id in transactionIds) {
+      batch.update(_collection(uid).doc(id), {'accountId': null});
+    }
+    await batch.commit();
+  }
 }

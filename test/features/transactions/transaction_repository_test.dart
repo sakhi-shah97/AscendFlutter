@@ -74,4 +74,30 @@ void main() {
     expect(await repository.watchTransactions(uid).first, isEmpty);
     expect(await repository.watchTransactions('other-user').first, hasLength(1));
   });
+
+  test('backfillAccountId stamps an account id onto the given transactions only', () async {
+    await repository.add(uid, _txn(TransactionType.savingsDeposit, 100, DateTime(2026, 1, 1)));
+    await repository.add(uid, _txn(TransactionType.savingsDeposit, 200, DateTime(2026, 1, 2)));
+    final all = await repository.watchTransactions(uid).first;
+    final onlyFirstId = all.where((t) => t.amount == 100).map((t) => t.id).toList();
+
+    await repository.backfillAccountId(uid, accountId: 'cash1', transactionIds: onlyFirstId);
+
+    final updated = await repository.watchTransactions(uid).first;
+    expect(updated.firstWhere((t) => t.amount == 100).accountId, 'cash1');
+    expect(updated.firstWhere((t) => t.amount == 200).accountId, isNull);
+  });
+
+  test('clearAccountId un-tags the given transactions', () async {
+    await repository.add(
+      uid,
+      AppTransaction(id: '', type: TransactionType.savingsDeposit, amount: 100, date: DateTime(2026, 1, 1), accountId: 'cash1'),
+    );
+    final [original] = await repository.watchTransactions(uid).first;
+
+    await repository.clearAccountId(uid, [original.id]);
+
+    final [updated] = await repository.watchTransactions(uid).first;
+    expect(updated.accountId, isNull);
+  });
 }

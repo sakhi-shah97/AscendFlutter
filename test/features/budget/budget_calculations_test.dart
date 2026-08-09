@@ -48,6 +48,27 @@ void main() {
     });
   });
 
+  group('totalMonthlyExpenses', () {
+    final budget = BudgetConfig(
+      monthlyIncome: 10000,
+      fixedCosts: const [CostItem(id: 'rent', name: 'Rent', amount: 3000)],
+      variableCosts: const [CostItem(id: 'groceries', name: 'Groceries', amount: 1500)],
+    );
+
+    test('sums fixed costs and this month\'s actual variable spend (not the budgeted variable total)', () {
+      final transactions = [
+        _txn(TransactionType.variableExpense, 500, DateTime(2026, 3, 5)),
+        _txn(TransactionType.variableExpense, 300, DateTime(2026, 3, 10)),
+      ];
+      expect(totalMonthlyExpenses(budget, transactions, DateTime(2026, 3, 15)), 3000 + 800);
+    });
+
+    test('ignores variable spend from other months', () {
+      final transactions = [_txn(TransactionType.variableExpense, 500, DateTime(2026, 2, 5))];
+      expect(totalMonthlyExpenses(budget, transactions, DateTime(2026, 3, 15)), 3000);
+    });
+  });
+
   group('variableSpendThisMonth', () {
     test('groups this month\'s variable expenses by category', () {
       final transactions = [

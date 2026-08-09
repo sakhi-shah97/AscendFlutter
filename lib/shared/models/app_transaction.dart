@@ -12,6 +12,7 @@ class AppTransaction {
     required this.date,
     this.category,
     this.note,
+    this.accountId,
   }) : assert(amount >= 0, 'amount is always stored positive; sign comes from type');
 
   final String id;
@@ -23,6 +24,12 @@ class AppTransaction {
   final String? category;
   final String? note;
 
+  /// Which [SavingsAccount] this belongs to — only meaningful when
+  /// [type]'s kind is [TransactionKind.savings]; null for every other
+  /// kind, and for savings transactions predating the accounts feature
+  /// until the one-time migration backfills it.
+  final String? accountId;
+
   factory AppTransaction.fromFirestore(String id, Map<String, dynamic> data) {
     final dateValue = data['date'];
     return AppTransaction(
@@ -32,6 +39,7 @@ class AppTransaction {
       date: dateValue is Timestamp ? dateValue.toDate() : DateTime.now(),
       category: data['category'] as String?,
       note: data['note'] as String?,
+      accountId: data['accountId'] as String?,
     );
   }
 
@@ -42,6 +50,7 @@ class AppTransaction {
       'date': Timestamp.fromDate(date),
       'category': category,
       'note': note,
+      'accountId': accountId,
     };
   }
 
@@ -51,6 +60,7 @@ class AppTransaction {
     DateTime? date,
     String? category,
     String? note,
+    String? accountId,
   }) {
     return AppTransaction(
       id: id,
@@ -59,6 +69,7 @@ class AppTransaction {
       date: date ?? this.date,
       category: category ?? this.category,
       note: note ?? this.note,
+      accountId: accountId ?? this.accountId,
     );
   }
 }

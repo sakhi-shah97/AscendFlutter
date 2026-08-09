@@ -5,8 +5,10 @@ import 'package:intl/intl.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_input_decoration.dart';
 import '../../../shared/models/app_transaction.dart';
+import '../../../shared/models/savings_account.dart';
 import '../../../shared/models/transaction_type.dart';
 import '../../../shared/widgets/app_text_field.dart';
+import '../../accounts/application/savings_account_providers.dart';
 import '../application/transaction_providers.dart';
 
 /// Opens the add/edit transaction form as a modal bottom sheet. Pass
@@ -39,6 +41,7 @@ class _TransactionFormSheetState extends ConsumerState<TransactionFormSheet> {
   late final TextEditingController _categoryController;
   late final TextEditingController _noteController;
   late DateTime _date;
+  String? _accountId;
   bool _isSaving = false;
 
   bool get _isEditing => widget.existing != null;
@@ -54,6 +57,17 @@ class _TransactionFormSheetState extends ConsumerState<TransactionFormSheet> {
     _categoryController = TextEditingController(text: existing?.category ?? '');
     _noteController = TextEditingController(text: existing?.note ?? '');
     _date = existing?.date ?? DateTime.now();
+    _accountId = existing?.accountId;
+  }
+
+  /// The account to use for a savings-kind transaction: the user's
+  /// explicit pick if it's still a valid account, otherwise a sensible
+  /// default (the first cash account, falling back to the first account
+  /// of any type). Null only when there are no accounts to pick from yet.
+  String? _resolveAccountId(List<SavingsAccount> accounts) {
+    if (_accountId != null && accounts.any((a) => a.id == _accountId)) return _accountId;
+    if (accounts.isEmpty) return null;
+    return accounts.firstWhere((a) => a.type == AccountType.cash, orElse: () => accounts.first).id;
   }
 
   @override
@@ -82,6 +96,8 @@ class _TransactionFormSheetState extends ConsumerState<TransactionFormSheet> {
     final category = _categoryController.text.trim();
     final note = _noteController.text.trim();
     final controller = ref.read(transactionControllerProvider);
+    final accounts = ref.read(savingsAccountsProvider).value ?? const [];
+    final accountId = _type.kind == TransactionKind.savings ? _resolveAccountId(accounts) : null;
 
     try {
       if (_isEditing) {
@@ -92,6 +108,7 @@ class _TransactionFormSheetState extends ConsumerState<TransactionFormSheet> {
             date: _date,
             category: category.isEmpty ? null : category,
             note: note.isEmpty ? null : note,
+            accountId: accountId,
           ),
         );
       } else {
@@ -103,6 +120,7 @@ class _TransactionFormSheetState extends ConsumerState<TransactionFormSheet> {
             date: _date,
             category: category.isEmpty ? null : category,
             note: note.isEmpty ? null : note,
+            accountId: accountId,
           ),
         );
       }
@@ -174,6 +192,32 @@ class _TransactionFormSheetState extends ConsumerState<TransactionFormSheet> {
                   ],
                   onChanged: _isSaving ? null : (value) => setState(() => _type = value!),
                 ),
+                if (_type.kind == TransactionKind.savings) ...[
+                  const SizedBox(height: 16),
+                  Builder(
+                    builder: (context) {
+                      final accounts = ref.watch(savingsAccountsProvider).value ?? const [];
+                      if (accounts.isEmpty) {
+                        return Text(
+                          'Setting up your default savings account…',
+                          style: Theme.of(context).textTheme.bodySmall,
+                        );
+                      }
+                      final value = _resolveAccountId(accounts);
+                      return DropdownButtonFormField<String>(
+                        initialValue: value,
+                        decoration: appInputDecoration('Account'),
+                        dropdownColor: AppColors.surface,
+                        style: TextStyle(color: AppColors.text),
+                        items: [
+                          for (final account in accounts)
+                            DropdownMenuItem(value: account.id, child: Text(account.name)),
+                        ],
+                        onChanged: _isSaving ? null : (value) => setState(() => _accountId = value),
+                      );
+                    },
+                  ),
+                ],
                 const SizedBox(height: 16),
                 AppTextField(
                   controller: _amountController,

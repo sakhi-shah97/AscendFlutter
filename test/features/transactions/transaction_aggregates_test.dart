@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:ascend/features/transactions/application/transaction_aggregates.dart';
 import 'package:ascend/shared/models/app_transaction.dart';
+import 'package:ascend/shared/models/savings_account.dart';
 import 'package:ascend/shared/models/transaction_type.dart';
 
 AppTransaction _txn(
@@ -10,6 +11,7 @@ AppTransaction _txn(
   DateTime? date,
   String? category,
   String id = 'id',
+  String? accountId,
 }) {
   return AppTransaction(
     id: id,
@@ -17,6 +19,7 @@ AppTransaction _txn(
     amount: amount,
     date: date ?? DateTime(2026, 1, 1),
     category: category,
+    accountId: accountId,
   );
 }
 
@@ -129,6 +132,47 @@ void main() {
         _txn(TransactionType.fixedExpense, 1000, date: DateTime(2026, 1, 2)),
       ];
       expect(netWorthTrajectory(txns), isEmpty);
+    });
+  });
+
+  group('accountBalance / totalCashSavings / totalInvestedSavings', () {
+    const cash = SavingsAccount(id: 'cash1', name: 'Cash', type: AccountType.cash);
+    const investment = SavingsAccount(id: 'inv1', name: 'Brokerage', type: AccountType.investment);
+
+    test('accountBalance nets deposits and withdrawals for one account only', () {
+      final txns = [
+        _txn(TransactionType.savingsDeposit, 1000, id: 't1', accountId: 'cash1'),
+        _txn(TransactionType.savingsWithdrawal, 200, id: 't2', accountId: 'cash1'),
+        _txn(TransactionType.savingsDeposit, 500, id: 't3', accountId: 'inv1'),
+      ];
+      expect(accountBalance(txns, 'cash1'), 800);
+      expect(accountBalance(txns, 'inv1'), 500);
+    });
+
+    test('splits totals by account type', () {
+      final txns = [
+        _txn(TransactionType.savingsDeposit, 700, id: 't1', accountId: 'cash1'),
+        _txn(TransactionType.savingsDeposit, 300, id: 't2', accountId: 'inv1'),
+      ];
+      expect(totalCashSavings(txns, const [cash, investment]), 700);
+      expect(totalInvestedSavings(txns, const [cash, investment]), 300);
+    });
+
+    test('unassigned savings transactions default to cash', () {
+      final txns = [_txn(TransactionType.savingsDeposit, 400, id: 't1')];
+      expect(totalCashSavings(txns, const [cash, investment]), 400);
+      expect(totalInvestedSavings(txns, const [cash, investment]), 0);
+    });
+
+    test('cash and invested totals sum to totalSavings when every account is covered', () {
+      final txns = [
+        _txn(TransactionType.savingsDeposit, 700, id: 't1', accountId: 'cash1'),
+        _txn(TransactionType.savingsDeposit, 300, id: 't2', accountId: 'inv1'),
+        _txn(TransactionType.savingsWithdrawal, 100, id: 't3', accountId: 'cash1'),
+      ];
+      final cashTotal = totalCashSavings(txns, const [cash, investment]);
+      final investedTotal = totalInvestedSavings(txns, const [cash, investment]);
+      expect(cashTotal + investedTotal, totalSavings(txns));
     });
   });
 }
