@@ -40,4 +40,23 @@ void main() {
 
     expect(find.textContaining('Welcome, ascender'), findsOneWidget);
   });
+
+  testWidgets('shows the trajectory, savings/debt, budget, and activity sections', (tester) async {
+    tester.view.physicalSize = const Size(400, 3000);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(theme: AppTheme.dark, home: const HomeScreen()),
+      ),
+    );
+    await tester.pump(const Duration(milliseconds: 900));
+
+    expect(find.text('Net worth trajectory'), findsOneWidget);
+    expect(find.text('Savings vs. debt'), findsOneWidget);
+    expect(find.text('Monthly costs'), findsOneWidget);
+    expect(find.text('Recent activity'), findsOneWidget);
+  });
 }
