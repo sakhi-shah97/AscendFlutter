@@ -63,6 +63,21 @@ enum TransactionType {
         TransactionType.debtCharge => true,
       };
 
+  /// Sign shown next to the amount in the ledger: "+" for events that read
+  /// as a gain (income arriving, savings growing, debt shrinking), "−" for
+  /// events that read as a cost (money spent, savings drawn down, debt
+  /// growing). Distinct from [isIncrease], which is about which bucket the
+  /// amount accumulates into, not how it should look to the user.
+  String get displaySign => switch (this) {
+        TransactionType.income => '+',
+        TransactionType.fixedExpense => '−',
+        TransactionType.variableExpense => '−',
+        TransactionType.savingsDeposit => '+',
+        TransactionType.savingsWithdrawal => '−',
+        TransactionType.debtPayment => '+',
+        TransactionType.debtCharge => '−',
+      };
+
   IconData get icon => switch (this) {
         TransactionType.income => Icons.arrow_downward,
         TransactionType.fixedExpense => Icons.receipt_long,

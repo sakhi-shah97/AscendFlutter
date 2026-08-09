@@ -3,9 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../shared/widgets/app_text_field.dart';
 import '../application/auth_providers.dart';
 import 'auth_utils.dart';
-import 'widgets/auth_text_field.dart';
 import 'widgets/google_sign_in_button.dart';
 
 class SignInScreen extends ConsumerStatefulWidget {
@@ -88,7 +88,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                       style: Theme.of(context).textTheme.bodyMedium,
                     ),
                     const SizedBox(height: 32),
-                    AuthTextField(
+                    AppTextField(
                       controller: _emailController,
                       label: 'Email',
                       keyboardType: TextInputType.emailAddress,
@@ -97,7 +97,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                       validator: validateEmail,
                     ),
                     const SizedBox(height: 16),
-                    AuthTextField(
+                    AppTextField(
                       controller: _passwordController,
                       label: 'Password',
                       obscureText: true,
